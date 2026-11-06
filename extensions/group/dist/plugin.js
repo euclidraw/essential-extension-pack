@@ -1,7 +1,7 @@
 var extension_default = {
 	id: "space.group",
 	title: "그룹",
-	version: "0.1.0",
+	version: "0.1.1",
 	summary: "선택한 객체의 그룹을 만들고 해제합니다.",
 	engine: "^0.1.0",
 	dependencies: { "core.select-suite": "^0.1.0" },
@@ -75,6 +75,7 @@ var src_default = {
 	activate(context) {
 		const world = context.world, selection = context.services.require("canvas.selection");
 		const surfaces = context.services.require("canvas.active-tool-surface");
+		if (typeof world.registerSelectionExpander !== "function") throw new Error("그룹 이동을 지원하는 최신 alid가 필요합니다.");
 		const offSchema = world.hasCanonicalSpec(HIERARCHY) ? () => {} : world.registerCanonical({
 			id: HIERARCHY,
 			defaults: { parentId: null },
@@ -145,6 +146,32 @@ var src_default = {
 			if (!p || !world.getCanonical(p, GROUP) || ids.some((id) => parent(id) !== p)) throw new Error("같은 그룹의 구성원을 선택하세요.");
 			return p;
 		};
+		const expand = (ids) => {
+			const all = world.listEntityIds(), result = new Set(ids), roots = /* @__PURE__ */ new Set();
+			for (const id of ids) {
+				const visited = /* @__PURE__ */ new Set([id]);
+				let node = id, up = parent(node);
+				while (up && world.getCanonical(up, GROUP)) {
+					if (visited.has(up)) throw new Error("순환 그룹은 이동할 수 없습니다.");
+					visited.add(up);
+					node = up;
+					up = parent(node);
+				}
+				if (node !== id) roots.add(node);
+			}
+			const visit = (node, path) => {
+				if (path.has(node)) throw new Error("순환 그룹은 이동할 수 없습니다.");
+				const next = new Set(path);
+				next.add(node);
+				for (const id of all) if (parent(id) === node) {
+					if (world.getCanonical(id, GROUP)) visit(id, next);
+					else result.add(id);
+				}
+			};
+			for (const root of roots) visit(root, /* @__PURE__ */ new Set());
+			return [...result];
+		};
+		const offExpander = world.registerSelectionExpander(expand);
 		const members = (group) => world.listEntityIds().filter((id) => parent(id) === group && !world.isEntityReadOnly(id));
 		const selectMembers = () => {
 			const group = groupOfSelection();
@@ -200,6 +227,7 @@ var src_default = {
 			dispose() {
 				active = false;
 				for (const dispose of disposers.reverse()) dispose();
+				offExpander();
 				offSchema();
 			}
 		};

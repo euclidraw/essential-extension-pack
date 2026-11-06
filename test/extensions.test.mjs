@@ -21,7 +21,7 @@ test('groups selected siblings, selects their members, ungroups and attaches to 
   const entities=new Map([['a',{'test.item':{}}],['b',{'test.item':{}}]]), commands=new Map();
   let selected=['a','b']; let batches=0; const history={begin(){},commit(){batches++},abort(){}};
   const selection={getSelection:()=>selected,setSelection:ids=>{selected=[...ids]}};
-  const world={hasCanonicalSpec:()=>false,registerCanonical:()=>()=>{},hasEntity:id=>entities.has(id),isEntityReadOnly:()=>false,
+  let expand; const world={registerSelectionExpander(fn){expand=fn;return ()=>{expand=undefined}},hasCanonicalSpec:()=>false,registerCanonical:()=>()=>{},hasEntity:id=>entities.has(id),isEntityReadOnly:()=>false,
     getCanonical:(id,aspect)=>entities.get(id)?.[aspect],listEntityIds:()=>[...entities.keys()],
     applyCanonicalTransaction(_caller,ops){for(const {id,aspect,patch} of ops){const obj=entities.get(id)??{}; if(patch===null)delete obj[aspect];else obj[aspect]={...obj[aspect],...patch};if(Object.keys(obj).length)entities.set(id,obj);else entities.delete(id);}}};
   const services={require(id){if(id==='canvas.selection')return selection;if(id==='canvas.active-tool-surface')return {get:()=>({selection,host:{history}})};if(id==='canvas.creation')return {create(){entities.set('f',{'space.scoped-frame':{title:'Frame'}});selected=['f'];return 'f'}};throw new Error(id)}};
@@ -29,6 +29,7 @@ test('groups selected siblings, selects their members, ungroups and attaches to 
   const grouping=group.activate({world,services,commands:registry});
   const framed=frame.activate({world,services,commands:registry,requireExtensionApi(id){assert.equal(id,'space.group');return grouping.api}});
   const id=commands.get('group:create')();assert.equal(world.getCanonical('a','core.hierarchy').parentId,id);assert.equal(world.getCanonical('b','core.hierarchy').parentId,id);
+  assert.deepEqual(expand(['a']).sort(),['a','b']);
   selected=['a']; commands.get('group:select-members')(); assert.deepEqual(selected.sort(),['a','b']);commands.get('group:ungroup')();assert.equal(world.getCanonical('a','core.hierarchy').parentId,null);
   commands.get('frame:create')();selected=['f','a'];commands.get('frame:attach')();assert.equal(world.getCanonical('a','core.hierarchy').parentId,'f');
   assert.throws(()=>grouping.api.setParent(['f'],'a'),/순환/);assert.equal(batches,3);
