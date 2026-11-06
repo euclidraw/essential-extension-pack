@@ -22,7 +22,7 @@ test('groups selected siblings, selects their members, ungroups and attaches to 
   const entities=new Map([['a',{'test.item':{}}],['b',{'test.item':{}}]]), commands=new Map();
   let selected=['a','b']; let batches=0; const history={begin(){},commit(){batches++},abort(){}};
   const selection={getSelection:()=>selected,setSelection:ids=>{selected=[...ids]}};
-  const expanders=[]; const expand=ids=>expanders.reduce((current,fn)=>fn(current),ids); const world={registerSelectionExpander(fn){expanders.push(fn);return ()=>expanders.splice(expanders.indexOf(fn),1)},hasCanonicalSpec:()=>false,registerCanonical:()=>()=>{},hasEntity:id=>entities.has(id),isEntityReadOnly:()=>false,
+  const expanders=[]; let containers; const expand=(ids,scope=null)=>expanders.reduce((current,fn)=>fn(current,scope),ids); const world={registerSelectionContainer(provider){containers=provider;return ()=>{containers=undefined}},registerSelectionExpander(fn){expanders.push(fn);return ()=>expanders.splice(expanders.indexOf(fn),1)},hasCanonicalSpec:()=>false,registerCanonical:()=>()=>{},hasEntity:id=>entities.has(id),isEntityReadOnly:()=>false,
     getCanonical:(id,aspect)=>entities.get(id)?.[aspect],listEntityIds:()=>[...entities.keys()],
     applyCanonicalTransaction(_caller,ops){for(const {id,aspect,patch} of ops){const obj=entities.get(id)??{}; if(patch===null)delete obj[aspect];else obj[aspect]={...obj[aspect],...patch};if(Object.keys(obj).length)entities.set(id,obj);else entities.delete(id);}}};
   const services={require(id){if(id==='canvas.selection')return selection;if(id==='canvas.active-tool-surface')return {get:()=>({selection,host:{history}})};if(id==='canvas.creation')return {create(){entities.set('f',{'space.scoped-frame':{title:'Frame'}});selected=['f'];return 'f'}};throw new Error(id)}};
@@ -30,12 +30,35 @@ test('groups selected siblings, selects their members, ungroups and attaches to 
   const grouping=group.activate({world,services,commands:registry});
   const framed=frame.activate({world,services,commands:registry,requireExtensionApi(id){assert.equal(id,'space.group');return grouping.api}});
   const id=commands.get('group:create')();assert.equal(world.getCanonical('a','core.hierarchy').parentId,id);assert.equal(world.getCanonical('b','core.hierarchy').parentId,id);
-  assert.deepEqual(expand(['a']).sort(),['a','b']);
+  assert.deepEqual(expand(['a']).sort(),['a','b']);assert.equal(containers.resolve('a',null),id);assert.equal(containers.resolve('a',id),undefined);assert.deepEqual(containers.members(id).sort(),['a','b']);assert.deepEqual(expand(['a'],id),['a']);assert.equal(containers.contains(id,'a'),true);
   selected=['a']; commands.get('group:select-members')(); assert.deepEqual(selected.sort(),['a','b']);commands.get('group:ungroup')();assert.equal(world.getCanonical('a','core.hierarchy').parentId,null);
   commands.get('frame:create')();selected=['f','a'];commands.get('frame:attach')();assert.equal(world.getCanonical('a','core.hierarchy').parentId,'f');
   assert.deepEqual(expand(['f']).sort(),['a','f']);
   entities.set('nested',{'space.scoped-frame':{title:'Nested'},'core.hierarchy':{parentId:'f'}});entities.set('nestedChild',{'test.item':{},'core.hierarchy':{parentId:'nested'}});
   assert.deepEqual(expand(['f']).sort(),['a','f','nested','nestedChild']);
   assert.throws(()=>grouping.api.setParent(['f'],'a'),/순환/);assert.equal(batches,3);
-  framed();grouping.dispose();assert.equal(commands.size,0);assert.equal(expanders.length,0);
+  framed();grouping.dispose();assert.equal(commands.size,0);assert.equal(expanders.length,0);assert.equal(containers,undefined);
+});
+
+test('nested groups resolve one level at a time and preserve the editing scope', () => {
+  const data=new Map([
+    ['outer',{'space.group':{}}], ['inner',{'space.group':{},'core.hierarchy':{parentId:'outer'}}],
+    ['a',{'test.item':{},'core.hierarchy':{parentId:'inner'}}], ['b',{'test.item':{},'core.hierarchy':{parentId:'inner'}}],
+    ['c',{'test.item':{},'core.hierarchy':{parentId:'outer'}}],
+  ]);
+  let provider,expand;
+  const world={hasCanonicalSpec:()=>true,registerSelectionContainer(p){provider=p;return()=>{}},registerSelectionExpander(fn){expand=fn;return()=>{}},
+    getCanonical:(id,aspect)=>data.get(id)?.[aspect],listEntityIds:()=>[...data.keys()],isEntityReadOnly:()=>false};
+  const selection={getSelection:()=>[]},services={require(id){return id==='canvas.selection'?selection:{get:()=>({selection})}}};
+  const installed=group.activate({world,services,commands:{register:()=>()=>{}}});
+  assert.equal(provider.resolve('a',null),'outer');assert.equal(provider.resolve('a','outer'),'inner');assert.equal(provider.resolve('a','inner'),undefined);
+  assert.equal(provider.parent('inner'),'outer');assert.equal(provider.contains('outer','a'),true);
+  assert.deepEqual(provider.members('outer').sort(),['a','b','c']);assert.deepEqual(expand(['a'],'inner'),['a']);assert.deepEqual(expand(['a'],'outer').sort(),['a','b']);
+  installed.dispose();
+});
+
+test('remains loadable on hosts that do not yet provide container selection', () => {
+  const world={hasCanonicalSpec:()=>true,registerSelectionExpander:()=>()=>{},getCanonical:()=>undefined,listEntityIds:()=>[],isEntityReadOnly:()=>false};
+  const services={require(id){return id==='canvas.selection'?{getSelection:()=>[]}:{get:()=>undefined}}};
+  const installed=group.activate({world,services,commands:{register:()=>()=>{}}});installed.dispose();
 });

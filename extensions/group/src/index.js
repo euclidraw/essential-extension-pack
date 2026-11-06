@@ -44,7 +44,7 @@ export default {
     const groupOfSelection = () => { const ids=selected(); const p=ids.length ? parent(ids[0]) : null; if (!p || !world.getCanonical(p, GROUP) || ids.some(id => parent(id)!==p)) throw new Error('같은 그룹의 구성원을 선택하세요.'); return p; };
     // Resolve the outermost contiguous group and its leaf entities at gesture start.
     // The host owns the actual preview, movement and Undo transaction.
-    const expand = ids => {
+    const expand = (ids, scope = null) => {
       const children = new Map(), result = new Set(ids), roots = new Set();
       for (const id of world.listEntityIds()) {
         const owner=parent(id); if (!owner) continue;
@@ -52,7 +52,7 @@ export default {
       }
       for (const id of ids) {
         const visited = new Set([id]); let node=id, up=parent(node);
-        while (up && world.getCanonical(up,GROUP)) {
+        while (up && up !== scope && world.getCanonical(up,GROUP)) {
           if (visited.has(up)) throw new Error('순환 그룹은 이동할 수 없습니다.');
           visited.add(up); node=up; up=parent(node);
         }
@@ -69,6 +69,32 @@ export default {
       for (const root of roots) visit(root,new Set());
       return [...result];
     };
+    const contains = (container, id) => {
+      const visited = new Set(); let node=id;
+      while (node && !visited.has(node)) { if (node === container) return true; visited.add(node); node=parent(node); }
+      return false;
+    };
+    const resolve = (id, scope) => {
+      const visited = new Set([id]); let node=id, up=parent(id);
+      while (up && up !== scope && world.getCanonical(up,GROUP)) {
+        if (visited.has(up)) throw new Error('순환 그룹은 선택할 수 없습니다.');
+        visited.add(up);node=up;up=parent(node);
+      }
+      return node === id ? undefined : node;
+    };
+    const containerMembers = container => {
+      if (!world.getCanonical(container,GROUP)) return undefined;
+      const children = new Map(), result = [], seen = new Set();
+      for (const id of world.listEntityIds()) { const up=parent(id);if (!up) continue;const list=children.get(up) ?? [];list.push(id);children.set(up,list); }
+      const visit = node => {
+        if (seen.has(node)) throw new Error('순환 그룹은 선택할 수 없습니다.'); seen.add(node);
+        for (const id of children.get(node) ?? []) { if (world.getCanonical(id,GROUP)) visit(id); else result.push(id); }
+      };
+      visit(container); return result;
+    };
+    const offContainer = world.registerSelectionContainer?.({resolve,members:containerMembers,contains,parent:id => {
+      const up=parent(id);return up && world.getCanonical(up,GROUP) ? up : null;
+    }}) ?? (() => {});
     const offExpander = world.registerSelectionExpander(expand);
     const members = group => world.listEntityIds().filter(id => parent(id) === group && !world.isEntityReadOnly(id));
     const selectMembers = () => { const group=groupOfSelection(); const surface = surfaces.get()?.selection ?? selection; if (typeof surface.setSelection !== 'function') throw new Error('다중 선택을 사용할 수 없습니다.'); surface.setSelection(members(group)); };
@@ -78,6 +104,6 @@ export default {
       context.commands.register({id:'group:select-members',title:'그룹 구성원 선택',summary:'선택한 객체와 같은 그룹의 구성원을 선택합니다.',run:selectMembers}),
       context.commands.register({id:'group:ungroup',title:'그룹 해제',summary:'선택한 객체의 그룹을 해제합니다.',keys:['Mod-S-g'],run:ungroup}),
     ];
-    return { api:Object.freeze({setParent, getParent:parent, isGroup:id=>!!world.getCanonical(id,GROUP)}), dispose(){ active=false; for (const dispose of disposers.reverse()) dispose(); offExpander(); offSchema(); } };
+    return { api:Object.freeze({setParent, getParent:parent, isGroup:id=>!!world.getCanonical(id,GROUP)}), dispose(){ active=false; for (const dispose of disposers.reverse()) dispose(); offExpander(); offContainer(); offSchema(); } };
   },
 };

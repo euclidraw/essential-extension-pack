@@ -1,7 +1,7 @@
 var extension_default = {
 	id: "space.group",
 	title: "그룹",
-	version: "0.1.3",
+	version: "0.1.4",
 	summary: "선택한 객체의 그룹을 만들고 해제합니다.",
 	engine: "^0.1.0",
 	dependencies: { "core.select-suite": "^0.1.0" },
@@ -156,7 +156,7 @@ var src_default = {
 			if (!p || !world.getCanonical(p, GROUP) || ids.some((id) => parent(id) !== p)) throw new Error("같은 그룹의 구성원을 선택하세요.");
 			return p;
 		};
-		const expand = (ids) => {
+		const expand = (ids, scope = null) => {
 			const children = /* @__PURE__ */ new Map(), result = new Set(ids), roots = /* @__PURE__ */ new Set();
 			for (const id of world.listEntityIds()) {
 				const owner = parent(id);
@@ -168,7 +168,7 @@ var src_default = {
 			for (const id of ids) {
 				const visited = /* @__PURE__ */ new Set([id]);
 				let node = id, up = parent(node);
-				while (up && world.getCanonical(up, GROUP)) {
+				while (up && up !== scope && world.getCanonical(up, GROUP)) {
 					if (visited.has(up)) throw new Error("순환 그룹은 이동할 수 없습니다.");
 					visited.add(up);
 					node = up;
@@ -186,6 +186,55 @@ var src_default = {
 			for (const root of roots) visit(root, /* @__PURE__ */ new Set());
 			return [...result];
 		};
+		const contains = (container, id) => {
+			const visited = /* @__PURE__ */ new Set();
+			let node = id;
+			while (node && !visited.has(node)) {
+				if (node === container) return true;
+				visited.add(node);
+				node = parent(node);
+			}
+			return false;
+		};
+		const resolve = (id, scope) => {
+			const visited = /* @__PURE__ */ new Set([id]);
+			let node = id, up = parent(id);
+			while (up && up !== scope && world.getCanonical(up, GROUP)) {
+				if (visited.has(up)) throw new Error("순환 그룹은 선택할 수 없습니다.");
+				visited.add(up);
+				node = up;
+				up = parent(node);
+			}
+			return node === id ? void 0 : node;
+		};
+		const containerMembers = (container) => {
+			if (!world.getCanonical(container, GROUP)) return void 0;
+			const children = /* @__PURE__ */ new Map(), result = [], seen = /* @__PURE__ */ new Set();
+			for (const id of world.listEntityIds()) {
+				const up = parent(id);
+				if (!up) continue;
+				const list = children.get(up) ?? [];
+				list.push(id);
+				children.set(up, list);
+			}
+			const visit = (node) => {
+				if (seen.has(node)) throw new Error("순환 그룹은 선택할 수 없습니다.");
+				seen.add(node);
+				for (const id of children.get(node) ?? []) if (world.getCanonical(id, GROUP)) visit(id);
+				else result.push(id);
+			};
+			visit(container);
+			return result;
+		};
+		const offContainer = world.registerSelectionContainer?.({
+			resolve,
+			members: containerMembers,
+			contains,
+			parent: (id) => {
+				const up = parent(id);
+				return up && world.getCanonical(up, GROUP) ? up : null;
+			}
+		}) ?? (() => {});
 		const offExpander = world.registerSelectionExpander(expand);
 		const members = (group) => world.listEntityIds().filter((id) => parent(id) === group && !world.isEntityReadOnly(id));
 		const selectMembers = () => {
@@ -247,6 +296,7 @@ var src_default = {
 				active = false;
 				for (const dispose of disposers.reverse()) dispose();
 				offExpander();
+				offContainer();
 				offSchema();
 			}
 		};
