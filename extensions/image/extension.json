@@ -1,0 +1,20 @@
+{
+  "id": "media.image-suite",
+  "title": "이미지",
+  "version": "0.1.0",
+  "summary": "이미지를 붙여넣거나 파일을 끌어와 추가합니다.",
+  "engine": "^0.1.0",
+  "dependencies": {
+    "core.clipboard": "^0.1.0"
+  },
+  "optionalDependencies": {
+    "core.select-suite": "^0.1.0"
+  },
+  "conflicts": [],
+  "provides": {
+    "services": [
+      "media.assets"
+    ],
+    "hsmSlots": []
+  }
+}

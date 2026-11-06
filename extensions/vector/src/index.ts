@@ -1,0 +1,12 @@
+export * from './types';
+export { createVectorPathAspect, VectorPathExtension } from './extension';
+export { createVectorPathExtension } from './install';
+export { deriveVectorPath } from './derive';
+export { renderVectorPathSvg } from './render-svg';
+export { getVectorGpuPolyline } from './render-gpu';
+export { createVectorSelectionContribution, pointInContours } from './selection';
+export { reboundRotatedVector } from './rebound';
+export { createVectorFrame, pointToLocal, pointToWorld, splitSegment, bendSegment, setVertexHandle, toggleVertex, normalizeVectorPathProps, vertex } from './geometry';
+export { VectorPenTool, VECTOR_PEN_STATE } from './pen-tool';
+export { VectorNodeEditor } from './node-editor';
+export type { VectorToolHost, VectorSelection, VectorPenOptions, VectorEditorOptions } from './vector-host';

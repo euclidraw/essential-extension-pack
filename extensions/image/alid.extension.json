@@ -1,0 +1,29 @@
+{
+  "apiVersion": 2,
+  "id": "media.image-suite",
+  "version": "0.1.0",
+  "engine": "^0.1.0",
+  "dependencies": {
+    "core.clipboard": "^0.1.0"
+  },
+  "optionalDependencies": {
+    "core.select-suite": "^0.1.0"
+  },
+  "conflicts": [],
+  "provides": {
+    "services": [
+      "media.assets"
+    ],
+    "aspects": [
+      "media.image"
+    ],
+    "hsmSlots": []
+  },
+  "title": "이미지",
+  "summary": "이미지를 붙여넣거나 파일을 끌어와 추가합니다.",
+  "entry": "dist/plugin.js",
+  "sha256": "7bf9532994dedd5b16c7cda140c03afa31d8e2d5f8d507c4c11713ea858aae53",
+  "aspectIds": [
+    "media.image"
+  ]
+}

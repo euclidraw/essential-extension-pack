@@ -1,0 +1,1 @@
+export function createPackageManifest(m) { return { id:m.id, version:m.version, engine:m.engine, dependencies:{...m.dependencies}, optionalDependencies:{...m.optionalDependencies}, conflicts:[...m.conflicts], provides:{services:[...m.provides.services], aspects:["connector.ports", "connector.wire"], hsmSlots:[...m.provides.hsmSlots]} }; }

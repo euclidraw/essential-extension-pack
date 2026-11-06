@@ -1,0 +1,48 @@
+{
+  "apiVersion": 2,
+  "id": "connector.smart-wire",
+  "version": "0.1.0",
+  "engine": "^0.1.0",
+  "dependencies": {
+    "core.select-suite": "^0.1.0"
+  },
+  "optionalDependencies": {},
+  "conflicts": [],
+  "provides": {
+    "services": [
+      "connector.tools"
+    ],
+    "aspects": [
+      "connector.ports",
+      "connector.wire"
+    ],
+    "hsmSlots": []
+  },
+  "title": "스마트 연결선",
+  "summary": "객체 사이를 연결하고 연결선의 경로를 조절합니다.",
+  "entry": "dist/plugin.js",
+  "sha256": "74efd30da97aa08077221edf734ee4fa63a64d110b884ea8580e98ed2f7d9d1b",
+  "aspectIds": [
+    "connector.ports",
+    "connector.wire"
+  ],
+  "settingsSchema": [
+    {
+      "key": "routing",
+      "label": "새 연결선 경로",
+      "kind": "select",
+      "defaultValue": "orthogonal",
+      "options": [
+        {
+          "label": "직교",
+          "value": "orthogonal"
+        },
+        {
+          "label": "베지어",
+          "value": "bezier"
+        }
+      ],
+      "frameScoped": true
+    }
+  ]
+}

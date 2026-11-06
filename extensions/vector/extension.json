@@ -1,0 +1,16 @@
+{
+  "id": "vector.pen-suite",
+  "title": "펜과 벡터 경로",
+  "version": "0.1.0",
+  "summary": "자유 벡터 경로와 정점을 편집합니다.",
+  "engine": "^0.1.0",
+  "dependencies": {
+    "core.select-suite": "^0.1.0"
+  },
+  "optionalDependencies": {},
+  "conflicts": [],
+  "provides": {
+    "services": [],
+    "hsmSlots": []
+  }
+}

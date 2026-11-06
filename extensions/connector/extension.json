@@ -1,0 +1,37 @@
+{
+  "id": "connector.smart-wire",
+  "title": "스마트 연결선",
+  "version": "0.1.0",
+  "summary": "객체 사이를 연결하고 연결선의 경로를 조절합니다.",
+  "engine": "^0.1.0",
+  "dependencies": {
+    "core.select-suite": "^0.1.0"
+  },
+  "optionalDependencies": {},
+  "conflicts": [],
+  "provides": {
+    "services": [
+      "connector.tools"
+    ],
+    "hsmSlots": []
+  },
+  "settingsSchema": [
+    {
+      "key": "routing",
+      "label": "새 연결선 경로",
+      "kind": "select",
+      "defaultValue": "orthogonal",
+      "options": [
+        {
+          "label": "직교",
+          "value": "orthogonal"
+        },
+        {
+          "label": "베지어",
+          "value": "bezier"
+        }
+      ],
+      "frameScoped": true
+    }
+  ]
+}

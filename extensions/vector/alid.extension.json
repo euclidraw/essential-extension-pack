@@ -1,0 +1,25 @@
+{
+  "apiVersion": 2,
+  "id": "vector.pen-suite",
+  "version": "0.1.0",
+  "engine": "^0.1.0",
+  "dependencies": {
+    "core.select-suite": "^0.1.0"
+  },
+  "optionalDependencies": {},
+  "conflicts": [],
+  "provides": {
+    "services": [],
+    "aspects": [
+      "vector.path"
+    ],
+    "hsmSlots": []
+  },
+  "title": "펜과 벡터 경로",
+  "summary": "자유 벡터 경로와 정점을 편집합니다.",
+  "entry": "dist/plugin.js",
+  "sha256": "63308d44db62841be794b83d481abe7f71c454a27b6be9ad1c6af6ec3f757692",
+  "aspectIds": [
+    "vector.path"
+  ]
+}

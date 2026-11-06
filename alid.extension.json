@@ -2,13 +2,22 @@
   "apiVersion": 1,
   "kind": "pack",
   "title": "Essential extensions",
-  "summary": "공간 구조를 위한 그룹과 프레임 확장",
+  "summary": "그룹, 프레임, 연결선, 벡터와 이미지를 위한 필수 확장",
   "extensions": [
     {
       "path": "extensions/group"
     },
     {
       "path": "extensions/frame"
+    },
+    {
+      "path": "extensions/connector"
+    },
+    {
+      "path": "extensions/vector"
+    },
+    {
+      "path": "extensions/image"
     }
   ]
 }
