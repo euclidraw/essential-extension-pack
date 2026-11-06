@@ -1,0 +1,11 @@
+{
+  "apiVersion": 1,
+  "kind": "pack",
+  "title": "Example extension pack",
+  "summary": "Replace this example with your own extension collection.",
+  "extensions": [
+    {
+      "path": "extensions/example"
+    }
+  ]
+}
