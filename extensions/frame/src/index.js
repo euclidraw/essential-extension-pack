@@ -1,0 +1,21 @@
+import metadata from '../extension.json';
+import { createPackageManifest } from './manifest.js';
+const ID='space.scoped-frame';
+const escape = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
+const geometry = (_props,id,view) => { const t=view.getCanonical(id,'core.transform') ?? {}, b=view.getCanonical(id,'core.bounds') ?? {}; return {x:t.x??0,y:t.y??0,rotation:t.rotation??0,width:b.width??640,height:b.height??480}; };
+const body = (p,g) => `<rect x="0.5" y="0.5" width="${Math.max(0,g.width-1)}" height="${Math.max(0,g.height-1)}" fill="#ffffff" fill-opacity="0.06" stroke="#7c3aed" stroke-dasharray="6 4"/><text x="12" y="22" fill="#6d28d9" font-family="sans-serif" font-size="14">${escape(p.title)}</text>`;
+const aspect={ id:ID,label:'프레임',summary:metadata.summary,defaults:{title:'프레임'},textFields:['title'],textSearchFields:['title'],dependsOnCanonical:[ID,'core.transform','core.bounds'],dependsOnComputed:[],derive:geometry,
+  renderDom(el,p,g){if(g) el.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 ${g.width} ${g.height}" style="pointer-events:none">${body(p,g)}</svg>`;},
+  renderSvg(p,g){return {svg:g?`<g transform="translate(${g.x},${g.y}) rotate(${g.rotation*180/Math.PI},${g.width/2},${g.height/2})">${body(p,g)}</g>`:''};},
+  ui:{controls:[{id:'title',kind:'text',field:'title',label:'제목',placement:'inspector'}]},
+};
+export default {...createPackageManifest(metadata),summary:metadata.summary,aspects:[aspect],ui:{controls:[
+  {id:'create',kind:'action',label:'프레임 추가',icon:'plus',commandSymbol:'frame:create',placement:'tool-shelf',requiresSelection:false},
+  {id:'attach',kind:'action',label:'프레임에 넣기',icon:'plus',commandSymbol:'frame:attach',placement:'selection-bar',requiresSelection:true,minSelectionCount:2},
+]},activate(context){
+  const group=context.requireExtensionApi('space.group'), creation=context.services.require('canvas.creation'), selection=context.services.require('canvas.selection'), surfaces=context.services.require('canvas.active-tool-surface');
+  const add=()=>creation.create({caller:'frame:create',aspects:{[ID]:{title:'프레임'}},width:640,height:480});
+  const attach=()=>{const ids=[...(surfaces.get()?.selection ?? selection).getSelection()]; const frames=ids.filter(id=>context.world.getCanonical(id,ID)); if(frames.length!==1)throw new Error('프레임 하나와 넣을 객체를 함께 선택하세요.'); group.setParent(ids.filter(id=>id!==frames[0]),frames[0],'frame:attach');};
+  const disposers=[context.commands.register({id:'frame:create',title:'프레임 추가',summary:'현재 화면에 프레임을 만듭니다.',run:add}),context.commands.register({id:'frame:attach',title:'프레임에 넣기',summary:'선택한 객체를 선택한 프레임에 넣습니다.',run:attach})];
+  return ()=>{for(const dispose of disposers.reverse())dispose();};
+}};

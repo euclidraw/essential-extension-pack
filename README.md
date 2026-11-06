@@ -1,9 +1,19 @@
-# alid extension pack template
+# alid Essential Extension Pack
 
-Create a public repository using this template and enter its `owner/repo` in alid's GitHub installer. This template contains a working sticky-note example under `extensions/example`; replace its code and IDs before publishing your own pack.
+alid의 공식 공간 구조 확장 팩입니다. alid의 **확장 관리 → GitHub에서 설치**에서 `euclidraw/essential-extension-pack`을 조회해 각 확장의 고정 커밋과 코드를 검토하고 승인하세요. 하위 폴더 팩을 지원하는 alid가 필요합니다. 팩은 `group`을 먼저 설치하고 `frame`을 설치합니다.
 
-`alid.extension.json` lists up to 20 members in installation order. A `{ "path": "extensions/example" }` member refers to a folder in this repository, pinned to the pack commit. Each folder has its own `alid.extension.json` and built bundle. A string such as `"owner/repo"` refers to a separate public extension repository, resolved to its own default-branch commit. Mix both forms; put dependency providers first. Nested packs and duplicate locations or extension IDs are rejected.
+## Group
 
-alid verifies every manifest and bundle before presenting the source and asking for trust. Installation is sequential: if a member fails, previously installed members remain. Members are managed and removed individually. Reinspect and approve the pack to update its members.
+같은 부모에 속한 객체 둘 이상을 선택해 **선택 항목 그룹화** (`Mod-g`)합니다. 그룹의 한 구성원을 선택해 **그룹 구성원 선택**을 실행하면 같은 그룹을 함께 선택하여 이동할 수 있습니다. **그룹 해제** (`Mod-Shift-g`)는 선택한 구성원의 그룹을 해제합니다. 계층과 그룹 생성·해제는 공유 Undo의 한 단계입니다. 중첩은 같은 부모의 형제들을 선택하여 만들 수 있습니다.
 
-The example is copied from [alid-extension-template](https://github.com/jiwonMe/alid-extension-template); see its README for build and development instructions. It is not an essential extension.
+## Frame
+
+**프레임 추가**로 프레임을 만들고, 프레임 하나와 객체를 함께 선택해 **프레임에 넣기**를 실행합니다. `space.scoped-frame`과 `core.hierarchy`를 사용하므로 호스트의 프레임 설정 스코프에 참여합니다. 그룹의 공개 계층 API가 필요하며 확장 매니페스트에 필수 의존성으로 선언합니다. 프레임 제목은 속성에서 바꿀 수 있고 SVG로 출력합니다.
+
+## 현재 범위
+
+이 초기 버전에서 그룹은 보이지 않는 계층 엔티티이며, 구성원 선택 명령으로 함께 이동합니다. 그룹이나 프레임을 드래그할 때 자손을 자동으로 함께 이동·변형하지 않습니다. 자동 포함, 클리핑, 드릴다운 선택, 프레임 출판은 아직 제공하지 않습니다. 프레임에 객체를 넣는 것은 수동 명령입니다. 기존 카드의 MathJax는 그대로이며 이 팩에 MathJax나 MCP 확장은 없습니다.
+
+## 개발과 검증
+
+각 폴더에서 `pnpm install --frozen-lockfile` 후 `pnpm build`로 번들과 매니페스트 해시를 갱신하세요. 두 확장을 빌드한 뒤 저장소 루트에서 `node --test test/*.test.mjs`를 실행합니다. 빌드 산출물 `dist/plugin.js`와 `alid.extension.json`을 함께 커밋합니다. 확장은 승인 후 앱 내부에서 실행되는 신뢰 코드입니다.

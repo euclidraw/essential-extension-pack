@@ -1,5 +1,5 @@
 {
-  "name": "alid-extension-template",
+  "name": "alid-extension-frame",
   "version": "0.3.0",
   "private": true,
   "type": "module",
@@ -10,8 +10,7 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
-    "test": "pnpm build && node --test test/*.test.mjs",
-    "test:watch": "node --test --watch test/plugin.test.mjs test/manifest.test.mjs",
+    "test": "pnpm build && node --test ../../test/*.test.mjs",
     "check:dist": "pnpm build && git diff --exit-code -- dist/plugin.js alid.extension.json"
   },
   "devDependencies": {

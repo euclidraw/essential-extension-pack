@@ -1,11 +1,14 @@
 {
   "apiVersion": 1,
   "kind": "pack",
-  "title": "Example extension pack",
-  "summary": "Replace this example with your own extension collection.",
+  "title": "Essential extensions",
+  "summary": "공간 구조를 위한 그룹과 프레임 확장",
   "extensions": [
     {
-      "path": "extensions/example"
+      "path": "extensions/group"
+    },
+    {
+      "path": "extensions/frame"
     }
   ]
 }
