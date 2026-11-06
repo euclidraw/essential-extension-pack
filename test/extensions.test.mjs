@@ -15,6 +15,7 @@ test('built manifests match the bundles and declare the group dependency', async
     assert.deepEqual(manifest.provides,(name==='group'?group:frame).provides);
   }
   assert.equal(frame.dependencies['space.group'],'^0.1.2');
+  for (const id of ['members','ungroup']) assert.deepEqual(group.ui.controls.find(control => control.id === id).selectionReference, {aspect:'core.hierarchy',field:'parentId',targetAspect:'space.group'});
 });
 
 test('groups selected siblings, selects their members, ungroups and attaches to a frame', () => {

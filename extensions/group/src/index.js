@@ -7,8 +7,8 @@ export default {
   ...createPackageManifest(metadata), summary: metadata.summary, aspects: [aspect],
   ui: { controls: [
     { id:'group', kind:'action', label:'선택 항목 그룹화', icon:'plus', commandSymbol:'group:create', placement:'selection-bar', requiresSelection:true, minSelectionCount:2 },
-    { id:'members', kind:'action', label:'그룹 구성원 선택', icon:'plus', commandSymbol:'group:select-members', placement:'selection-bar', requiresSelection:true },
-    { id:'ungroup', kind:'action', label:'그룹 해제', icon:'plus', commandSymbol:'group:ungroup', placement:'selection-bar', requiresSelection:true },
+    { id:'members', kind:'action', label:'그룹 구성원 선택', icon:'plus', commandSymbol:'group:select-members', placement:'selection-bar', requiresSelection:true, selectionReference:{aspect:'core.hierarchy',field:'parentId',targetAspect:'space.group'} },
+    { id:'ungroup', kind:'action', label:'그룹 해제', icon:'plus', commandSymbol:'group:ungroup', placement:'selection-bar', requiresSelection:true, selectionReference:{aspect:'core.hierarchy',field:'parentId',targetAspect:'space.group'} },
   ] },
   activate(context) {
     const world = context.world, selection = context.services.require('canvas.selection');

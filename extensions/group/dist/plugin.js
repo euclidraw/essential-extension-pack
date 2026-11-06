@@ -1,7 +1,7 @@
 var extension_default = {
 	id: "space.group",
 	title: "그룹",
-	version: "0.1.2",
+	version: "0.1.3",
 	summary: "선택한 객체의 그룹을 만들고 해제합니다.",
 	engine: "^0.1.0",
 	dependencies: { "core.select-suite": "^0.1.0" },
@@ -60,7 +60,12 @@ var src_default = {
 			icon: "plus",
 			commandSymbol: "group:select-members",
 			placement: "selection-bar",
-			requiresSelection: true
+			requiresSelection: true,
+			selectionReference: {
+				aspect: "core.hierarchy",
+				field: "parentId",
+				targetAspect: "space.group"
+			}
 		},
 		{
 			id: "ungroup",
@@ -69,7 +74,12 @@ var src_default = {
 			icon: "plus",
 			commandSymbol: "group:ungroup",
 			placement: "selection-bar",
-			requiresSelection: true
+			requiresSelection: true,
+			selectionReference: {
+				aspect: "core.hierarchy",
+				field: "parentId",
+				targetAspect: "space.group"
+			}
 		}
 	] },
 	activate(context) {
