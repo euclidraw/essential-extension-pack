@@ -45,7 +45,11 @@ export default {
     // Resolve the outermost contiguous group and its leaf entities at gesture start.
     // The host owns the actual preview, movement and Undo transaction.
     const expand = ids => {
-      const all = world.listEntityIds(), result = new Set(ids), roots = new Set();
+      const children = new Map(), result = new Set(ids), roots = new Set();
+      for (const id of world.listEntityIds()) {
+        const owner=parent(id); if (!owner) continue;
+        const siblings=children.get(owner) ?? []; siblings.push(id); children.set(owner,siblings);
+      }
       for (const id of ids) {
         const visited = new Set([id]); let node=id, up=parent(node);
         while (up && world.getCanonical(up,GROUP)) {
@@ -55,10 +59,11 @@ export default {
         if (node !== id) roots.add(node);
       }
       const visit = (node, path) => {
-        if (path.has(node)) throw new Error('순환 그룹은 이동할 수 없습니다.');
+        if (path.has(node)) throw new Error('순환 계층은 이동할 수 없습니다.');
         const next=new Set(path); next.add(node);
-        for (const id of all) if (parent(id) === node) {
-          if (world.getCanonical(id,GROUP)) visit(id,next); else result.add(id);
+        for (const id of children.get(node) ?? []) {
+          const isGroup=!!world.getCanonical(id,GROUP);
+          if (!isGroup) result.add(id); else visit(id,next);
         }
       };
       for (const root of roots) visit(root,new Set());
@@ -73,6 +78,6 @@ export default {
       context.commands.register({id:'group:select-members',title:'그룹 구성원 선택',summary:'선택한 객체와 같은 그룹의 구성원을 선택합니다.',run:selectMembers}),
       context.commands.register({id:'group:ungroup',title:'그룹 해제',summary:'선택한 객체의 그룹을 해제합니다.',keys:['Mod-S-g'],run:ungroup}),
     ];
-    return { api:Object.freeze({setParent}), dispose(){ active=false; for (const dispose of disposers.reverse()) dispose(); offExpander(); offSchema(); } };
+    return { api:Object.freeze({setParent, getParent:parent, isGroup:id=>!!world.getCanonical(id,GROUP)}), dispose(){ active=false; for (const dispose of disposers.reverse()) dispose(); offExpander(); offSchema(); } };
   },
 };

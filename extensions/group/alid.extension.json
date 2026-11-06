@@ -1,7 +1,7 @@
 {
   "apiVersion": 2,
   "id": "space.group",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "engine": "^0.1.0",
   "dependencies": {
     "core.select-suite": "^0.1.0"
@@ -18,7 +18,7 @@
   "title": "그룹",
   "summary": "선택한 객체의 그룹을 만들고 해제합니다.",
   "entry": "dist/plugin.js",
-  "sha256": "acd80f7ed9236f73310e5bf90bb59fd080de7fc6a6479ff5e6572b7f26c896b3",
+  "sha256": "08456d83aa0d4add232bb4cac206a9d2cd14aa938e524a9e95f0e7f8bcea554a",
   "aspectIds": [
     "space.group"
   ]

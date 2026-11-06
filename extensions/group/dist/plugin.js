@@ -1,7 +1,7 @@
 var extension_default = {
 	id: "space.group",
 	title: "그룹",
-	version: "0.1.1",
+	version: "0.1.2",
 	summary: "선택한 객체의 그룹을 만들고 해제합니다.",
 	engine: "^0.1.0",
 	dependencies: { "core.select-suite": "^0.1.0" },
@@ -147,7 +147,14 @@ var src_default = {
 			return p;
 		};
 		const expand = (ids) => {
-			const all = world.listEntityIds(), result = new Set(ids), roots = /* @__PURE__ */ new Set();
+			const children = /* @__PURE__ */ new Map(), result = new Set(ids), roots = /* @__PURE__ */ new Set();
+			for (const id of world.listEntityIds()) {
+				const owner = parent(id);
+				if (!owner) continue;
+				const siblings = children.get(owner) ?? [];
+				siblings.push(id);
+				children.set(owner, siblings);
+			}
 			for (const id of ids) {
 				const visited = /* @__PURE__ */ new Set([id]);
 				let node = id, up = parent(node);
@@ -160,13 +167,11 @@ var src_default = {
 				if (node !== id) roots.add(node);
 			}
 			const visit = (node, path) => {
-				if (path.has(node)) throw new Error("순환 그룹은 이동할 수 없습니다.");
+				if (path.has(node)) throw new Error("순환 계층은 이동할 수 없습니다.");
 				const next = new Set(path);
 				next.add(node);
-				for (const id of all) if (parent(id) === node) {
-					if (world.getCanonical(id, GROUP)) visit(id, next);
-					else result.add(id);
-				}
+				for (const id of children.get(node) ?? []) if (!!!world.getCanonical(id, GROUP)) result.add(id);
+				else visit(id, next);
 			};
 			for (const root of roots) visit(root, /* @__PURE__ */ new Set());
 			return [...result];
@@ -223,7 +228,11 @@ var src_default = {
 			})
 		];
 		return {
-			api: Object.freeze({ setParent }),
+			api: Object.freeze({
+				setParent,
+				getParent: parent,
+				isGroup: (id) => !!world.getCanonical(id, GROUP)
+			}),
 			dispose() {
 				active = false;
 				for (const dispose of disposers.reverse()) dispose();

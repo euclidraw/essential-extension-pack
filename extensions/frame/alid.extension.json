@@ -1,10 +1,10 @@
 {
   "apiVersion": 2,
   "id": "space.frame",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "engine": "^0.1.0",
   "dependencies": {
-    "space.group": "^0.1.0",
+    "space.group": "^0.1.2",
     "core.select-suite": "^0.1.0"
   },
   "optionalDependencies": {},
@@ -19,7 +19,7 @@
   "title": "프레임",
   "summary": "프레임을 만들고 선택한 객체를 프레임에 넣습니다.",
   "entry": "dist/plugin.js",
-  "sha256": "1f2a17cf7de45c2d21fd5c32c28c583ffe44a440a3d600b5db05157ae366ce3a",
+  "sha256": "6cd1b82ee655d257eb66d3313b51abd0c70de0b2a5be2fe1dae11928c46de8ac",
   "aspectIds": [
     "space.scoped-frame"
   ]

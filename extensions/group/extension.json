@@ -1,7 +1,7 @@
 {
   "id": "space.group",
   "title": "그룹",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "summary": "선택한 객체의 그룹을 만들고 해제합니다.",
   "engine": "^0.1.0",
   "dependencies": {

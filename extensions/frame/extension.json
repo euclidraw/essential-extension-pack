@@ -1,11 +1,11 @@
 {
   "id": "space.frame",
   "title": "프레임",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "summary": "프레임을 만들고 선택한 객체를 프레임에 넣습니다.",
   "engine": "^0.1.0",
   "dependencies": {
-    "space.group": "^0.1.0",
+    "space.group": "^0.1.2",
     "core.select-suite": "^0.1.0"
   },
   "optionalDependencies": {},

@@ -14,8 +14,17 @@ export default {...createPackageManifest(metadata),summary:metadata.summary,aspe
   {id:'attach',kind:'action',label:'프레임에 넣기',icon:'plus',commandSymbol:'frame:attach',placement:'selection-bar',requiresSelection:true,minSelectionCount:2},
 ]},activate(context){
   const group=context.requireExtensionApi('space.group'), creation=context.services.require('canvas.creation'), selection=context.services.require('canvas.selection'), surfaces=context.services.require('canvas.active-tool-surface');
+  const offExpander=context.world.registerSelectionExpander(ids=>{
+    const children=new Map(), result=new Set(ids);
+    for(const id of context.world.listEntityIds()) { const owner=group.getParent(id); if(!owner)continue; const siblings=children.get(owner) ?? [];siblings.push(id);children.set(owner,siblings); }
+    const visit=(node,path)=>{ if(path.has(node))throw new Error('순환 프레임은 이동할 수 없습니다.'); const next=new Set(path);next.add(node);
+      for(const child of children.get(node) ?? []) { const isGroup=group.isGroup(child), isFrame=!!context.world.getCanonical(child,ID);if(!isGroup)result.add(child);if(isGroup||isFrame)visit(child,next); }
+    };
+    for(const id of ids)if(context.world.getCanonical(id,ID))visit(id,new Set());
+    return [...result];
+  });
   const add=()=>creation.create({caller:'frame:create',aspects:{[ID]:{title:'프레임'}},width:640,height:480});
   const attach=()=>{const ids=[...(surfaces.get()?.selection ?? selection).getSelection()]; const frames=ids.filter(id=>context.world.getCanonical(id,ID)); if(frames.length!==1)throw new Error('프레임 하나와 넣을 객체를 함께 선택하세요.'); group.setParent(ids.filter(id=>id!==frames[0]),frames[0],'frame:attach');};
   const disposers=[context.commands.register({id:'frame:create',title:'프레임 추가',summary:'현재 화면에 프레임을 만듭니다.',run:add}),context.commands.register({id:'frame:attach',title:'프레임에 넣기',summary:'선택한 객체를 선택한 프레임에 넣습니다.',run:attach})];
-  return ()=>{for(const dispose of disposers.reverse())dispose();};
+  return ()=>{for(const dispose of disposers.reverse())dispose();offExpander();};
 }};

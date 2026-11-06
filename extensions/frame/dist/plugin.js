@@ -1,11 +1,11 @@
 var extension_default = {
 	id: "space.frame",
 	title: "프레임",
-	version: "0.1.0",
+	version: "0.1.1",
 	summary: "프레임을 만들고 선택한 객체를 프레임에 넣습니다.",
 	engine: "^0.1.0",
 	dependencies: {
-		"space.group": "^0.1.0",
+		"space.group": "^0.1.2",
 		"core.select-suite": "^0.1.0"
 	},
 	optionalDependencies: {},
@@ -103,6 +103,28 @@ var src_default = {
 	}] },
 	activate(context) {
 		const group = context.requireExtensionApi("space.group"), creation = context.services.require("canvas.creation"), selection = context.services.require("canvas.selection"), surfaces = context.services.require("canvas.active-tool-surface");
+		const offExpander = context.world.registerSelectionExpander((ids) => {
+			const children = /* @__PURE__ */ new Map(), result = new Set(ids);
+			for (const id of context.world.listEntityIds()) {
+				const owner = group.getParent(id);
+				if (!owner) continue;
+				const siblings = children.get(owner) ?? [];
+				siblings.push(id);
+				children.set(owner, siblings);
+			}
+			const visit = (node, path) => {
+				if (path.has(node)) throw new Error("순환 프레임은 이동할 수 없습니다.");
+				const next = new Set(path);
+				next.add(node);
+				for (const child of children.get(node) ?? []) {
+					const isGroup = group.isGroup(child), isFrame = !!context.world.getCanonical(child, ID);
+					if (!isGroup) result.add(child);
+					if (isGroup || isFrame) visit(child, next);
+				}
+			};
+			for (const id of ids) if (context.world.getCanonical(id, ID)) visit(id, /* @__PURE__ */ new Set());
+			return [...result];
+		});
 		const add = () => creation.create({
 			caller: "frame:create",
 			aspects: { [ID]: { title: "프레임" } },
@@ -128,6 +150,7 @@ var src_default = {
 		})];
 		return () => {
 			for (const dispose of disposers.reverse()) dispose();
+			offExpander();
 		};
 	}
 };
